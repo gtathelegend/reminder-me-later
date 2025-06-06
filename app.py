@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from datetime import datetime
 from models import db, Reminder
 
@@ -45,6 +45,22 @@ def create_reminder():
             'method': reminder.method
         }
     }), 201
+
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+@app.route('/api/reminders', methods=['GET'])
+def list_reminders():
+    reminders = Reminder.query.order_by(Reminder.remind_at).all()
+    return jsonify([
+        {
+            'id': r.id,
+            'message': r.message,
+            'remind_at': r.remind_at.isoformat(),
+            'method': r.method
+        } for r in reminders
+    ])
 
 if __name__ == '__main__':
     app.run(debug=True)

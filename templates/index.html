@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Remind Me Later</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>Remind Me Later</h1>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Add Reminder</h2>
+      <form id="reminderForm">
+        <input type="text" id="message" placeholder="Reminder message" required>
+        <input type="datetime-local" id="remind_at" required>
+        <select id="method">
+          <option value="email">Email</option>
+          <option value="sms">SMS</option>
+        </select>
+        <button type="submit">Add</button>
+      </form>
+    </section>
+
+    <section class="card" id="reminderList">
+      <h2>Upcoming Reminders</h2>
+      <ul id="reminders"></ul>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById('reminderForm');
+    const list = document.getElementById('reminders');
+
+    function loadReminders() {
+      fetch('/api/reminders')
+        .then(res => res.json())
+        .then(data => {
+          list.innerHTML = '';
+          data.forEach(r => {
+            const li = document.createElement('li');
+            li.innerHTML = `<strong>${r.message}</strong><br><small>${r.remind_at.replace("T", " ").slice(0, 16)} | ${r.method.toUpperCase()}</small>`;
+            list.appendChild(li);
+          });
+        });
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const message = document.getElementById('message').value;
+      const remind_at = document.getElementById('remind_at').value;
+      const method = document.getElementById('method').value;
+
+      fetch('/api/reminders/create', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ message, remind_at, method })
+      }).then(() => {
+        form.reset();
+        loadReminders();
+      });
+    });
+
+    // Load on page load
+    loadReminders();
+  </script>
+</body>
+</html>
